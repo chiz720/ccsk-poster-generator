@@ -2,7 +2,7 @@ import os
 import uuid
 import base64
 from flask import Flask, render_template, request, send_file, jsonify
-from weasyprint import HTML
+from playwright.sync_api import sync_playwright
 
 app = Flask(__name__)
 app.config["UPLOAD_FOLDER"] = os.path.join(os.path.dirname(__file__), "static", "uploads")
@@ -42,9 +42,38 @@ def preview():
 def download():
     data = request.get_json()
     html = build_poster_html(data)
-    pdf_path = os.path.join(app.config["UPLOAD_FOLDER"], f"poster_{uuid.uuid4().hex[:8]}.pdf")
-    HTML(string=html).write_pdf(pdf_path)
-    return send_file(pdf_path, as_attachment=True, download_name="CCSK_Poster.pdf")
+    # Save HTML to a temp file for Playwright to load
+    html_fname = f"poster_{uuid.uuid4().hex[:8]}.html"
+    html_path = os.path.join(app.config["UPLOAD_FOLDER"], html_fname)
+    with open(html_path, "w") as f:
+        f.write(html)
+
+    png_path = os.path.join(app.config["UPLOAD_FOLDER"], f"poster_{uuid.uuid4().hex[:8]}.png")
+
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(viewport={"width": 3840, "height": 2160})
+        page.goto(f"file://{html_path}")
+        page.wait_for_load_state("networkidle")
+        page.screenshot(path=png_path, full_page=False)
+        browser.close()
+
+    # Clean up temp HTML
+    os.remove(html_path)
+
+    return send_file(png_path, as_attachment=True, download_name="CCSK_Poster.png")
+
+
+@app.route("/fullscreen", methods=["POST"])
+def fullscreen():
+    """Save poster HTML and redirect to a fullscreen view."""
+    data = request.get_json()
+    html = build_poster_html(data)
+    fname = f"poster_{uuid.uuid4().hex[:8]}.html"
+    fpath = os.path.join(app.config["UPLOAD_FOLDER"], fname)
+    with open(fpath, "w") as f:
+        f.write(html)
+    return jsonify({"url": f"/static/uploads/{fname}"})
 
 
 @app.route("/upload-image", methods=["POST"])
@@ -100,8 +129,10 @@ def build_poster_html(data):
 <head>
 <meta charset="utf-8">
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+
 @page {{
-    size: 841mm 594mm;
+    size: 3840px 2160px;
     margin: 0;
 }}
 
@@ -112,109 +143,124 @@ def build_poster_html(data):
 }}
 
 body {{
-    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-    font-size: 11pt;
-    color: #2a2a2a;
+    font-family: 'Inter', 'DejaVu Sans', 'Liberation Sans', sans-serif;
+    font-size: 38px;
+    color: #1a1a1a;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
     background: white;
-    width: 841mm;
-    height: 594mm;
+    width: 3840px;
+    height: 2160px;
 }}
 
 /* ═══ BANNER ═══ */
 .banner {{
     background: linear-gradient(135deg, #1B2A4A 0%, #304E78 40%, #3C608C 60%, #1B2A4A 100%);
     color: white;
-    padding: 18mm 25mm;
-    position: relative;
-    height: 52mm;
-    display: flex;
-    align-items: center;
+    height: 340px;
+    width: 100%;
+    border-collapse: collapse;
 }}
 
-.banner-text {{
-    flex: 1;
+.banner td {{
+    vertical-align: middle;
+    padding: 40px 60px;
+}}
+
+.banner .banner-text-cell {{
+    text-align: center;
 }}
 
 .banner h1 {{
-    font-size: 32pt;
+    font-size: 96px;
     font-weight: 800;
-    margin-bottom: 4mm;
+    margin-bottom: 12px;
     line-height: 1.2;
 }}
 
 .banner .authors {{
-    font-size: 15pt;
-    margin-bottom: 2mm;
+    font-size: 48px;
+    margin-bottom: 6px;
 }}
 
 .banner .affiliations {{
-    font-size: 11pt;
-    opacity: 0.8;
+    font-size: 38px;
+    opacity: 0.85;
 }}
 
-.banner .logo {{
-    width: 38mm;
-    height: 38mm;
+.banner .logo-cell {{
+    width: 240px;
+    text-align: center;
+}}
+
+.banner .logo-cell img {{
+    width: 180px;
+    height: 180px;
     border-radius: 50%;
     background: white;
-    padding: 2mm;
-    margin-left: 15mm;
-    flex-shrink: 0;
-}}
-
-.banner .logo img {{
-    width: 100%;
-    height: 100%;
-    border-radius: 50%;
-    object-fit: contain;
+    padding: 8px;
 }}
 
 /* ═══ CONTENT ═══ */
 .content {{
-    display: flex;
-    padding: 6mm 8mm;
-    gap: 6mm;
-    height: 524mm;
+    width: 100%;
+    height: 1700px;
+    border-collapse: separate;
+    border-spacing: 6px 0;
+    table-layout: fixed;
+    background: #B0BBD0;
 }}
 
-.column {{
-    flex: 1;
-    overflow: hidden;
+.content td {{
+    width: 33.333%;
+    vertical-align: top;
+    padding: 36px 40px;
+    background: #FFFFFF;
+}}
+
+.content td:first-child {{
+    background: #F4F6FA;
+}}
+
+.content td:last-child {{
+    background: #F4F6FA;
 }}
 
 /* ═══ BLOCKS ═══ */
 .block {{
-    margin-bottom: 5mm;
+    margin-bottom: 28px;
 }}
 
 .block h3 {{
-    font-size: 15pt;
+    font-size: 56px;
     font-weight: 700;
     text-align: center;
-    padding-bottom: 2mm;
-    border-bottom: 0.6pt solid #1B2A4A;
-    margin-bottom: 3mm;
+    padding-bottom: 10px;
+    border-bottom: none;
+    margin-bottom: 16px;
     color: #1B2A4A;
 }}
 
 .block-body {{
-    font-size: 10.5pt;
-    line-height: 1.45;
+    font-size: 38px;
+    font-weight: 400;
+    line-height: 1.6;
     text-align: justify;
     hyphens: auto;
+    color: #1a1a1a;
 }}
 
 .block-body p {{
-    margin-bottom: 2mm;
+    margin-bottom: 12px;
 }}
 
 .block-body ul, .block-body ol {{
-    margin: 2mm 0 2mm 5mm;
-    padding-left: 3mm;
+    margin: 10px 0 10px 24px;
+    padding-left: 16px;
 }}
 
 .block-body li {{
-    margin-bottom: 1mm;
+    margin-bottom: 6px;
 }}
 
 .block-body strong {{
@@ -228,49 +274,49 @@ body {{
 .block-body table {{
     width: 100%;
     border-collapse: collapse;
-    margin: 3mm 0;
-    font-size: 10pt;
+    margin: 14px 0;
+    font-size: 34px;
 }}
 
 .block-body th {{
-    border-top: 1.5pt solid black;
-    border-bottom: 0.8pt solid black;
-    padding: 1.5mm 2mm;
+    border-top: 3px solid black;
+    border-bottom: 2px solid black;
+    padding: 8px 12px;
     font-weight: 700;
     text-align: center;
 }}
 
 .block-body td {{
-    padding: 1.2mm 2mm;
+    padding: 6px 12px;
     text-align: center;
-    border-bottom: 0.3pt solid #ddd;
+    border-bottom: 1px solid #ddd;
 }}
 
 .block-body tr:last-child td {{
-    border-bottom: 1pt solid black;
+    border-bottom: 2px solid black;
 }}
 
 .block-body img {{
     max-width: 100%;
     height: auto;
     display: block;
-    margin: 3mm auto;
+    margin: 14px auto;
 }}
 
 .block-body code {{
     background: #f0f0f0;
-    padding: 0.5mm 1.5mm;
-    border-radius: 1mm;
-    font-size: 9.5pt;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 34px;
 }}
 
 /* ═══ HIGHLIGHTED BLOCK ═══ */
 .highlighted {{
     background: #E8EDF4;
-    border: 0.5pt solid #B0BBD0;
-    padding: 4mm;
-    border-radius: 1mm;
-    margin-bottom: 5mm;
+    border: 2px solid #B0BBD0;
+    padding: 20px;
+    border-radius: 6px;
+    margin-bottom: 28px;
 }}
 
 .highlighted h3 {{
@@ -281,16 +327,23 @@ body {{
 .footer {{
     background: #1B2A4A;
     color: white;
-    height: 12mm;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 25mm;
-    font-size: 10pt;
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
+    height: 120px;
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 34px;
+}}
+
+.footer td {{
+    vertical-align: middle;
+    padding: 0 60px;
+}}
+
+.footer td:nth-child(2) {{
+    text-align: center;
+}}
+
+.footer td:nth-child(3) {{
+    text-align: right;
 }}
 
 .footer a {{
@@ -301,28 +354,31 @@ body {{
 </head>
 <body>
 
-<div class="banner">
-    <div class="banner-text">
+<table class="banner"><tr>
+    <td class="logo-cell">
+        <img src="data:image/png;base64,{LOGO_B64}" alt="CCSK Logo">
+    </td>
+    <td class="banner-text-cell">
         <h1>{title}</h1>
         <div class="authors">{authors}</div>
         <div class="affiliations">{affiliations}</div>
-    </div>
-    <div class="logo">
+    </td>
+    <td class="logo-cell">
         <img src="data:image/png;base64,{LOGO_B64}" alt="CCSK Logo">
-    </div>
-</div>
+    </td>
+</tr></table>
 
-<div class="content">
-    <div class="column">{col1_html}</div>
-    <div class="column">{col2_html}</div>
-    <div class="column">{col3_html}</div>
-</div>
+<table class="content"><tr>
+    <td>{col1_html}</td>
+    <td class="col-even">{col2_html}</td>
+    <td>{col3_html}</td>
+</tr></table>
 
-<div class="footer">
-    <span>13th CCSK Annual Scientific Critical Care Congress</span>
-    <span>13&ndash;15 May 2026 &bull; Argyle Grand Hotel, Nairobi</span>
-    <span>{email}</span>
-</div>
+<table class="footer"><tr>
+    <td>13th CCSK Annual Scientific Critical Care Congress</td>
+    <td>13&ndash;15 May 2026 &bull; Argyle Grand Hotel, Nairobi</td>
+    <td>{email}</td>
+</tr></table>
 
 </body>
 </html>"""

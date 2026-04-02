@@ -1,21 +1,30 @@
 FROM python:3.12-slim-bookworm
 
-# Install WeasyPrint system dependencies
+# Install Playwright/Chromium system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    libpango1.0-0 \
-    libpangocairo-1.0-0 \
-    libgdk-pixbuf-2.0-0 \
-    libffi-dev \
-    libcairo2 \
-    libglib2.0-0 \
     fonts-liberation \
     fonts-dejavu-core \
+    libnss3 \
+    libatk1.0-0 \
+    libatk-bridge2.0-0 \
+    libcups2 \
+    libdrm2 \
+    libxkbcommon0 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxrandr2 \
+    libgbm1 \
+    libpango-1.0-0 \
+    libcairo2 \
+    libasound2 \
+    libxshmfence1 \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
 
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt gunicorn
+RUN pip install --no-cache-dir -r requirements.txt gunicorn \
+    && python -m playwright install chromium
 
 COPY . .
 

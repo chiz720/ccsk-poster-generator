@@ -163,8 +163,30 @@ async function previewPoster() {
     }
 }
 
-// ═══ DOWNLOAD PDF ═══
-async function downloadPDF() {
+// ═══ FULLSCREEN (4K TV) ═══
+async function openFullscreen() {
+    const data = gatherData();
+    document.body.classList.add('loading');
+
+    try {
+        const res = await fetch('/fullscreen', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+        });
+        const result = await res.json();
+        if (result.url) {
+            window.open(result.url, '_blank');
+        }
+    } catch (err) {
+        alert('Fullscreen failed: ' + err.message);
+    } finally {
+        document.body.classList.remove('loading');
+    }
+}
+
+// ═══ DOWNLOAD PNG (4K) ═══
+async function downloadPNG() {
     const data = gatherData();
     document.body.classList.add('loading');
 
@@ -175,13 +197,13 @@ async function downloadPDF() {
             body: JSON.stringify(data),
         });
 
-        if (!res.ok) throw new Error('PDF generation failed');
+        if (!res.ok) throw new Error('PNG generation failed');
 
         const blob = await res.blob();
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = 'CCSK_Poster.pdf';
+        a.download = 'CCSK_Poster.png';
         document.body.appendChild(a);
         a.click();
         a.remove();
