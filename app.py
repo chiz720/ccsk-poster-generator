@@ -71,18 +71,6 @@ def download():
     return send_file(png_path, as_attachment=True, download_name="CCSK_Poster.png")
 
 
-@app.route("/fullscreen", methods=["POST"])
-def fullscreen():
-    """Save poster HTML and redirect to a fullscreen view."""
-    data = request.get_json()
-    html = build_poster_html(data)
-    fname = f"poster_{uuid.uuid4().hex[:8]}.html"
-    fpath = os.path.join(app.config["UPLOAD_FOLDER"], fname)
-    with open(fpath, "w") as f:
-        f.write(html)
-    return jsonify({"url": f"/static/uploads/{fname}"})
-
-
 @app.route("/upload-image", methods=["POST"])
 def upload_image():
     if "image" not in request.files:

@@ -163,28 +163,6 @@ async function previewPoster() {
     }
 }
 
-// ═══ FULLSCREEN (4K TV) ═══
-async function openFullscreen() {
-    const data = gatherData();
-    document.body.classList.add('loading');
-
-    try {
-        const res = await fetch('/fullscreen', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(data),
-        });
-        const result = await res.json();
-        if (result.url) {
-            window.open(result.url, '_blank');
-        }
-    } catch (err) {
-        alert('Fullscreen failed: ' + err.message);
-    } finally {
-        document.body.classList.remove('loading');
-    }
-}
-
 // ═══ DOWNLOAD PNG (4K) ═══
 async function downloadPNG() {
     const data = gatherData();
