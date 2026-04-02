@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CCSK Poster Generator</title>
     <link rel="stylesheet" href="/static/css/style.css">
+    <!-- Quill Rich Text Editor -->
+    <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
 </head>
 <body>
 
@@ -19,21 +22,42 @@
 </header>
 
 <main>
+    <!-- HOW IT WORKS -->
+    <section class="card how-it-works">
+        <h2>How It Works</h2>
+        <div class="steps-row">
+            <div class="step">
+                <div class="step-num">1</div>
+                <p>Fill in your title, authors &amp; affiliations</p>
+            </div>
+            <div class="step-arrow">&rarr;</div>
+            <div class="step">
+                <div class="step-num">2</div>
+                <p>Type your content in each column — use the toolbar to format</p>
+            </div>
+            <div class="step-arrow">&rarr;</div>
+            <div class="step">
+                <div class="step-num">3</div>
+                <p>Click <strong>Download PDF</strong> to get your print-ready poster</p>
+            </div>
+        </div>
+    </section>
+
     <!-- POSTER INFO -->
     <section class="card">
         <h2>Poster Details</h2>
         <div class="form-grid">
             <div class="form-group full">
                 <label for="title">Poster Title</label>
-                <input type="text" id="title" placeholder="Your research title here...">
+                <input type="text" id="title" placeholder="Enter your research title here...">
             </div>
             <div class="form-group">
                 <label for="authors">Authors</label>
-                <input type="text" id="authors" placeholder="First Author, Second Author, Third Author">
+                <input type="text" id="authors" placeholder="J. Smith, A. Mwangi, P. Ochieng">
             </div>
             <div class="form-group">
                 <label for="affiliations">Affiliations</label>
-                <input type="text" id="affiliations" placeholder="Department, Institution, City, Kenya">
+                <input type="text" id="affiliations" placeholder="Department of Critical Care, Kenyatta National Hospital, Nairobi">
             </div>
             <div class="form-group">
                 <label for="email">Contact Email</label>
@@ -44,102 +68,54 @@
 
     <!-- COLUMNS -->
     <div class="columns-container">
+        <!-- COLUMN 1 -->
         <div class="column-editor" id="col1-editor">
             <h2>Column 1 <span class="hint">Introduction, Aim, Methods</span></h2>
             <div class="sections" id="col1-sections">
                 <div class="section-block" data-col="col1">
                     <input type="text" class="section-heading" placeholder="Section heading (e.g. Introduction)" value="Introduction">
-                    <label class="hl-toggle"><input type="checkbox" class="section-hl"> Highlighted</label>
-                    <textarea class="section-content" rows="6" placeholder="Write your content in Markdown...
-
-Supports:
-- **bold**, *italic*
-- bullet lists, numbered lists
-- tables, images
-- [links](url)">Start by providing background context and briefly explain the topic or problem you are addressing. This helps set the stage for your research and provides a foundation for understanding the significance of your work.</textarea>
+                    <label class="hl-toggle"><input type="checkbox" class="section-hl"> Highlighted section</label>
+                    <div class="editor-container">
+                        <div class="quill-editor"><p>Start by providing background context and briefly explain the topic or problem you are addressing.</p></div>
+                    </div>
                     <button class="btn-remove" onclick="removeSection(this)">&times;</button>
                 </div>
             </div>
             <button class="btn-add" onclick="addSection('col1')">+ Add Section</button>
         </div>
 
+        <!-- COLUMN 2 -->
         <div class="column-editor" id="col2-editor">
-            <h2>Column 2 <span class="hint">Results, Figures, Data</span></h2>
+            <h2>Column 2 <span class="hint">Results, Figures, Tables</span></h2>
             <div class="sections" id="col2-sections">
                 <div class="section-block" data-col="col2">
                     <input type="text" class="section-heading" placeholder="Section heading" value="Results">
-                    <label class="hl-toggle"><input type="checkbox" class="section-hl"> Highlighted</label>
-                    <textarea class="section-content" rows="6" placeholder="Write your content in Markdown...">Present your core findings in a clear and organized manner. Use graphs, tables, or figures to present your data visually.
-
-**Key Findings:** Highlight the most important results of your study.</textarea>
+                    <label class="hl-toggle"><input type="checkbox" class="section-hl"> Highlighted section</label>
+                    <div class="editor-container">
+                        <div class="quill-editor"><p>Present your core findings in a clear and organized manner. Use the image button in the toolbar to insert figures.</p></div>
+                    </div>
                     <button class="btn-remove" onclick="removeSection(this)">&times;</button>
                 </div>
             </div>
             <button class="btn-add" onclick="addSection('col2')">+ Add Section</button>
         </div>
 
+        <!-- COLUMN 3 -->
         <div class="column-editor" id="col3-editor">
             <h2>Column 3 <span class="hint">Discussion, Conclusion, References</span></h2>
             <div class="sections" id="col3-sections">
                 <div class="section-block" data-col="col3">
                     <input type="text" class="section-heading" placeholder="Section heading" value="Discussion">
-                    <label class="hl-toggle"><input type="checkbox" class="section-hl"> Highlighted</label>
-                    <textarea class="section-content" rows="6" placeholder="Write your content in Markdown...">Interpret the results, explaining how they address the research question and relate to existing knowledge.</textarea>
+                    <label class="hl-toggle"><input type="checkbox" class="section-hl"> Highlighted section</label>
+                    <div class="editor-container">
+                        <div class="quill-editor"><p>Interpret the results, explaining how they address the research question and relate to existing knowledge.</p></div>
+                    </div>
                     <button class="btn-remove" onclick="removeSection(this)">&times;</button>
                 </div>
             </div>
             <button class="btn-add" onclick="addSection('col3')">+ Add Section</button>
         </div>
     </div>
-
-    <!-- IMAGE UPLOAD -->
-    <section class="card">
-        <h2>Upload Images</h2>
-        <p class="hint">Upload figures/charts. Copy the markdown tag into your section content.</p>
-        <div class="upload-area">
-            <input type="file" id="image-upload" accept="image/*">
-            <button class="btn-primary" onclick="uploadImage()">Upload</button>
-        </div>
-        <div id="uploaded-images"></div>
-    </section>
-
-    <!-- MARKDOWN HELP -->
-    <section class="card collapsible">
-        <h2 onclick="toggleCollapse(this)">Markdown Guide <span class="arrow">&#9660;</span></h2>
-        <div class="collapse-body">
-            <div class="md-help-grid">
-                <div>
-                    <h4>Text Formatting</h4>
-                    <pre>**bold text**
-*italic text*
-~~strikethrough~~</pre>
-                </div>
-                <div>
-                    <h4>Lists</h4>
-                    <pre>- Bullet item 1
-- Bullet item 2
-
-1. Numbered item
-2. Another item</pre>
-                </div>
-                <div>
-                    <h4>Tables</h4>
-                    <pre>| Col 1 | Col 2 | Col 3 |
-|-------|-------|-------|
-| Foo   | 13.37 | alpha |
-| Bar   | 2.17  | beta  |</pre>
-                </div>
-                <div>
-                    <h4>Images</h4>
-                    <pre>![Caption](image_url)
-
-After uploading, paste the
-markdown tag shown below
-the image.</pre>
-                </div>
-            </div>
-        </div>
-    </section>
 
     <!-- ACTIONS -->
     <div class="actions">

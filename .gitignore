@@ -6,3 +6,4 @@ static/uploads/*.png
 static/uploads/*.jpg
 static/uploads/*.jpeg
 !static/uploads/.gitkeep
+~$*

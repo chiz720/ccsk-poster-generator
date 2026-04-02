@@ -1,7 +1,6 @@
 import os
 import uuid
 import base64
-import markdown
 from flask import Flask, render_template, request, send_file, jsonify
 from weasyprint import HTML
 
@@ -17,12 +16,14 @@ with open(LOGO_PATH, "rb") as f:
     LOGO_B64 = base64.b64encode(f.read()).decode()
 
 
-def md(text):
-    """Convert markdown to HTML."""
-    return markdown.markdown(
-        text,
-        extensions=["tables", "fenced_code", "nl2br"],
-    )
+def clean_html(text):
+    """Sanitize HTML content from the rich text editor."""
+    if not text:
+        return ""
+    # Strip any script tags for safety
+    import re
+    text = re.sub(r'<script[^>]*>.*?</script>', '', text, flags=re.DOTALL | re.IGNORECASE)
+    return text
 
 
 @app.route("/")
@@ -77,7 +78,7 @@ def build_poster_html(data):
         html = ""
         for sec in sections:
             heading = sec.get("heading", "")
-            content = md(sec.get("content", ""))
+            content = clean_html(sec.get("content", ""))
             highlighted = sec.get("highlighted", False)
             hl_class = ' class="highlighted"' if highlighted else ""
             html += f"""
