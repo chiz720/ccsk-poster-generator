@@ -50,13 +50,20 @@ def download():
 
     png_path = os.path.join(app.config["UPLOAD_FOLDER"], f"poster_{uuid.uuid4().hex[:8]}.png")
 
-    with sync_playwright() as p:
-        browser = p.chromium.launch()
-        page = browser.new_page(viewport={"width": 3840, "height": 2160})
-        page.goto(f"file://{html_path}")
-        page.wait_for_load_state("networkidle")
-        page.screenshot(path=png_path, full_page=False)
-        browser.close()
+    try:
+        with sync_playwright() as p:
+            browser = p.chromium.launch(args=["--no-sandbox", "--disable-setuid-sandbox"])
+            page = browser.new_page(viewport={"width": 3840, "height": 2160})
+            page.goto(f"file://{html_path}")
+            page.wait_for_load_state("networkidle")
+            page.screenshot(path=png_path, full_page=False)
+            browser.close()
+    except Exception as e:
+        app.logger.error(f"PNG generation failed: {e}")
+        # Clean up temp HTML
+        if os.path.exists(html_path):
+            os.remove(html_path)
+        return jsonify({"error": str(e)}), 500
 
     # Clean up temp HTML
     os.remove(html_path)
