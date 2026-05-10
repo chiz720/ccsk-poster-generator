@@ -56,7 +56,7 @@ def download():
             page = browser.new_page(viewport={"width": 3840, "height": 2160})
             page.goto(f"file://{html_path}")
             page.wait_for_load_state("networkidle")
-            page.screenshot(path=png_path, full_page=False)
+            page.screenshot(path=png_path, full_page=True)
             browser.close()
     except Exception as e:
         app.logger.error(f"PNG generation failed: {e}")
@@ -145,7 +145,7 @@ body {{
     text-rendering: optimizeLegibility;
     background: white;
     width: 3840px;
-    height: 2160px;
+    min-height: 2160px;
 }}
 
 /* ═══ BANNER ═══ */
@@ -199,7 +199,7 @@ body {{
 /* ═══ CONTENT ═══ */
 .content {{
     width: 100%;
-    height: 1700px;
+    min-height: 1700px;
     border-collapse: separate;
     border-spacing: 6px 0;
     table-layout: fixed;
@@ -211,6 +211,7 @@ body {{
     vertical-align: top;
     padding: 36px 40px;
     background: #FFFFFF;
+    height: auto;
 }}
 
 .content td:first-child {{
